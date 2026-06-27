@@ -1,0 +1,109 @@
+sonarqube:
+  # SonarQube Server Configuration
+  host: https://sonarqube.example.com
+  token: ${SONARQUBE_TOKEN}
+  
+  # Project Configuration
+  projectKey: com.example:code-review-agent
+  projectName: Code Review Agent
+  projectVersion: 1.0.0
+  
+  # Source Configuration
+  sources: src
+  tests: __tests__, test, tests, src/**/*.test.ts, src/**/*.spec.ts
+  
+  # Coverage Configuration
+  coverageReportPaths: coverage/lcov.info
+  testExecutionReportPath: test-results/junit.xml
+  
+  # Exclusions
+  exclusions:
+    - '**/node_modules/**'
+    - '**/*.min.js'
+    - '**/dist/**'
+    - '**/build/**'
+    - '**/.next/**'
+  
+  # Code Coverage Thresholds
+  coverage:
+    overall_threshold: 70
+    new_code_threshold: 85
+    modified_code_threshold: 90
+    
+  # Quality Gate Settings
+  quality_gate:
+    enabled: true
+    wait_for_quality_gate: true
+    timeout_seconds: 300
+    
+  # Issue Priorities
+  issue_tracking:
+    block_on_critical: true
+    block_on_blocker: true
+    max_allowed_issues:
+      blocker: 0
+      critical: 0
+      major: 5
+      minor: 20
+      info: 100
+  
+  # Language-Specific Settings
+  languages:
+    java:
+      version: 11
+      sonar.java.source: 11
+      sonar.java.target: 11
+      sonar.java.binaries: target/classes
+    
+    typescript:
+      version: 4.5
+      sonar.typescript.node: /usr/local/bin/node
+    
+    python:
+      version: 3.9
+    
+  # Analysis Rules
+  rules:
+    # Security Rules
+    enable:
+      - squid:S2068  # Hardcoded passwords
+      - squid:S89    # SQL injection
+      - squid:S2092  # Secure random
+      - squid:S2115  # Database passwords
+      - squid:S5334  # Cipher algorithms
+      
+    # Code Quality Rules
+    quality:
+      - squid:S1172  # Unused method parameters
+      - squid:S1118  # Utility class without constructor
+      - squid:S3776  # Cognitive complexity
+      - squid:S1188  # Line length limit
+      
+    # Testing Rules
+    testing:
+      - squid:S2699  # Tests should include assertions
+      - squid:S1871  # Same code in if-else branches
+  
+  # Webhook Configuration
+  webhooks:
+    enabled: true
+    url: ${SONARQUBE_WEBHOOK_URL}
+    
+  # Reporting
+  reporting:
+    format: json
+    output_dir: ./sonarqube-report
+    generate_report: true
+    
+  # Performance Settings
+  performance:
+    max_threads: 4
+    timeout_seconds: 1800
+    
+  # Integration Settings
+  integration:
+    github_enabled: true
+    github_token: ${GITHUB_TOKEN}
+    github_repo: ${GITHUB_REPOSITORY}
+    github_pr_check: true
+    github_status_context: "SonarQube Analysis"

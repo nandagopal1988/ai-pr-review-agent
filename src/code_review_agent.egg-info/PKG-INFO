@@ -1,3 +1,31 @@
+Metadata-Version: 2.4
+Name: code-review-agent
+Version: 1.0.0
+Summary: AI-powered code review agent with GitHub Copilot integration
+Home-page: https://github.com/YOUR_ORG/code-review-agent
+Author: Your Team
+Author-email: Your Team <your.email@example.com>
+License: MIT
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests>=2.31.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: PyGithub>=2.1.1
+Requires-Dist: openai>=1.3.0
+Requires-Dist: anthropic>=0.7.0
+Requires-Dist: python-dotenv>=1.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.1.0; extra == "dev"
+Requires-Dist: black>=23.10.0; extra == "dev"
+Requires-Dist: flake8>=6.1.0; extra == "dev"
+Requires-Dist: mypy>=1.5.0; extra == "dev"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
 # AI Code Review Agent for GitHub - Spring Boot Microservices
 
 An intelligent Python-based code review agent integrated with GitHub Copilot that automatically reviews pull requests with comprehensive static analysis, custom rules, code coverage tracking, and LLM-based coding standard verification. Optimized for Spring Boot microservices.

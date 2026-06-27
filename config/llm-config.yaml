@@ -1,0 +1,177 @@
+llm:
+  # LLM Provider Configuration
+  provider: openai  # Options: openai, anthropic
+  
+  # Model Settings
+  model: gpt-4-turbo-preview
+  temperature: 0.3  # Lower = more deterministic
+  max_tokens: 2000
+  top_p: 0.9
+  
+  # Fallback Models
+  fallback_models:
+    - gpt-3.5-turbo
+    - claude-3-sonnet
+  
+  # API Configuration
+  api:
+    timeout_seconds: 30
+    max_retries: 3
+    retry_delay_ms: 1000
+  
+  # Rate Limiting
+  rate_limit:
+    requests_per_minute: 60
+    tokens_per_minute: 90000
+  
+  # Coding Standards to Verify
+  standards:
+    - name: spring_boot_best_practices
+      enabled: true
+      description: Spring Boot microservices best practices
+      rules:
+        - Use @Service for business logic, @Repository for data access
+        - Inject dependencies via constructor, not @Autowired field injection
+        - Use @Transactional for database operations
+        - Externalize configuration using @Value or @ConfigurationProperties
+        - Use logging instead of System.out
+        - Implement proper error handling and exception handling
+    
+    - name: naming_conventions
+      enabled: true
+      description: Java naming standards
+      rules:
+        - camelCase for methods and variables
+        - PascalCase for classes and interfaces
+        - UPPER_SNAKE_CASE for constants
+        - Meaningful names (min 3 chars except iterators)
+    
+    - name: code_complexity
+      enabled: true
+      description: Code complexity and maintainability
+      rules:
+        - Max cyclomatic complexity: 10
+        - Max cognitive complexity: 15
+        - Max method length: 50 lines
+        - Max nesting level: 4
+    
+    - name: security_best_practices
+      enabled: true
+      description: Security vulnerabilities and best practices
+      rules:
+        - No hardcoded credentials or secrets
+        - Use parameterized queries to prevent SQL injection
+        - Validate all inputs
+        - Use Spring Security for authentication/authorization
+        - Don't expose sensitive data in logs
+        - Use HTTPS for external communication
+    
+    - name: performance_optimization
+      enabled: true
+      description: Performance and efficiency
+      rules:
+        - Avoid database N+1 queries
+        - Use appropriate database indexes
+        - Cache expensive operations
+        - Use pagination for large result sets
+        - Avoid string concatenation in loops
+    
+    - name: error_handling
+      enabled: true
+      description: Exception and error handling
+      rules:
+        - Catch specific exceptions, not generic Exception
+        - Log error details with proper log levels
+        - Provide meaningful error messages
+        - Use Spring @ExceptionHandler for centralized error handling
+    
+    - name: testing
+      enabled: true
+      description: Unit testing standards
+      rules:
+        - Public methods should have tests
+        - Test names should be descriptive (test_feature_scenario)
+        - Use JUnit 5 and Mockito for testing
+        - Aim for >80% code coverage
+    
+    - name: documentation
+      enabled: true
+      description: Code documentation standards
+      rules:
+        - Document public methods with JavaDoc
+        - Include parameter descriptions
+        - Document return values and exceptions
+        - Keep documentation up-to-date
+  
+  # Review Prompts
+  prompts:
+    system_prompt: |
+      You are an expert Java and Spring Boot code reviewer.
+      Review the provided code for adherence to Spring Boot best practices and coding standards.
+      Identify:
+      1. Spring Boot anti-patterns
+      2. Security vulnerabilities
+      3. Performance issues
+      4. Code quality problems
+      5. Testing gaps
+      
+      Provide constructive, actionable feedback with specific examples.
+    
+    code_review_prompt: |
+      Review this Java code for Spring Boot microservices compliance:
+      
+      ```java
+      {code}
+      ```
+      
+      Changed lines: {changed_lines}
+      File: {file_path}
+      
+      Check against:
+      {standards}
+      
+      Provide:
+      - Spring Boot specific violations
+      - Security concerns
+      - Performance issues
+      - Test coverage gaps
+      - Suggested fixes
+      - Overall quality assessment
+
+  # Output Configuration
+  output:
+    format: json  # Options: json, markdown, html
+    include_score: true
+    include_suggestions: true
+    include_examples: true
+    
+  # Caching
+  cache:
+    enabled: true
+    ttl_hours: 24
+    
+  # Logging
+  logging:
+    level: info  # Options: debug, info, warn, error
+    include_tokens_used: true
+    include_response_time: true
+
+# Environment-Specific Settings
+environments:
+  development:
+    llm:
+      model: gpt-3.5-turbo  # Faster for dev
+      temperature: 0.5
+      max_tokens: 1000
+  
+  staging:
+    llm:
+      model: gpt-4-turbo-preview
+      temperature: 0.3
+      max_tokens: 1500
+  
+  production:
+    llm:
+      model: gpt-4-turbo-preview
+      temperature: 0.2
+      max_tokens: 2000
