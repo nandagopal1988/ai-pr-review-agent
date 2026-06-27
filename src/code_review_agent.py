@@ -5,12 +5,12 @@ import os
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional
 
-from utils.pr_analyzer import PRAnalyzer
-from utils.llm_reviewer import LLMReviewer
-from utils.rule_engine import RuleEngine
+from .pr_analyzer import PRAnalyzer
+from .llm_reviewer import LLMReviewer
+from .rule_engine import RuleEngine
 
-from utils.coverage_analyzer import CoverageAnalyzer
-from utils.sonarqube_client import SonarQubeClient
+from .coverage_analyzer import CoverageAnalyzer
+from .sonarqube_client import SonarQubeClient
 
 
 @dataclass
