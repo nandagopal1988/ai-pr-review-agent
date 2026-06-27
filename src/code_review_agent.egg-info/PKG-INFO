@@ -2,7 +2,7 @@ Metadata-Version: 2.4
 Name: code-review-agent
 Version: 1.0.0
 Summary: AI-powered code review agent with GitHub Copilot integration
-Home-page: https://github.com/YOUR_ORG/code-review-agent
+Home-page: https://github.com/nandagopal1988/ai-pr-review-agent
 Author: Your Team
 Author-email: Your Team <your.email@example.com>
 License: MIT

@@ -120,7 +120,8 @@ jobs:
           REVIEW_CONTEXT: ${{ env.REVIEW_CONTEXT }}
           REVIEW_STANDARDS: ${{ env.REVIEW_STANDARDS }}
         run: |
-          ai-pr-review
+          cd ai-pr-review-agent
+          python src/code_review_agent.py
       ##################################################
       # Generate Summary
       ##################################################
