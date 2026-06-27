@@ -1,0 +1,58 @@
+name: AI PR Review Agent
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SERVICE_NAME: ${{ vars.SERVICE_NAME || 'sng-product-service' }}
+      REVIEW_FOCUS: ${{ vars.REVIEW_FOCUS || 'spring boot service' }}
+      REVIEW_CONTEXT: ${{ vars.REVIEW_CONTEXT || 'Focus on API contracts, transaction boundaries, and service reliability.' }}
+      REVIEW_STANDARDS: ${{ vars.REVIEW_STANDARDS || '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build project
+        run: mvn -B test
+        continue-on-error: true
+
+      - name: Create review summary
+        run: |
+          echo "## 🤖 AI PR Review Agent" > review-summary.md
+          echo "" >> review-summary.md
+          echo "- Service: $SERVICE_NAME" >> review-summary.md
+          echo "- Focus: $REVIEW_FOCUS" >> review-summary.md
+          echo "- Context: $REVIEW_CONTEXT" >> review-summary.md
+          echo "" >> review-summary.md
+          echo "The workflow completed for this pull request." >> review-summary.md
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('review-summary.md', 'utf8');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });

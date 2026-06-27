@@ -1,0 +1,160 @@
+name: AI PR Review Agent
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.gitignore'
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SERVICE_NAME: ${{ vars.SERVICE_NAME || 'generic-service' }}
+      REVIEW_FOCUS: ${{ vars.REVIEW_FOCUS || 'Java Spring Boot code quality, security and maintainability' }}
+      REVIEW_CONTEXT: ${{ vars.REVIEW_CONTEXT || 'Review PR changes for correctness, security vulnerabilities, performance issues and Spring Boot best practices.' }}
+      REVIEW_STANDARDS: ${{ vars.REVIEW_STANDARDS || '' }}
+    steps:
+      ##################################################
+      # Checkout Source Repository
+      ##################################################
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      ##################################################
+      # Debug Repository Structure
+      ##################################################
+      - name: Inspect repository
+        run: |
+          pwd
+          ls -la
+          echo "Searching build files..."
+          find . \( -name pom.xml -o -name build.gradle -o -name build.gradle.kts \)
+      ##################################################
+      # Setup Java
+      ##################################################
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      ##################################################
+      # Setup Python
+      ##################################################
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      ##################################################
+      # Detect Build Tool
+      ##################################################
+      - name: Detect build tool
+        id: detect-build
+        shell: bash
+        run: |
+          if find . -name pom.xml | grep -q pom.xml; then
+            echo "build_tool=maven" >> $GITHUB_OUTPUT
+          elif find . -name build.gradle | grep -q build.gradle; then
+            echo "build_tool=gradle" >> $GITHUB_OUTPUT
+          elif find . -name build.gradle.kts | grep -q build.gradle.kts; then
+            echo "build_tool=gradle" >> $GITHUB_OUTPUT
+          else
+            echo "build_tool=none" >> $GITHUB_OUTPUT
+          fi
+      ##################################################
+      # Run Maven Build
+      ##################################################
+      - name: Run Maven Test
+        if: steps.detect-build.outputs.build_tool == 'maven'
+        shell: bash
+        run: |
+          POM_FILE=$(find . -name pom.xml | head -1)
+          echo "Using Maven file: $POM_FILE"
+          mvn -B -f "$POM_FILE" test
+        continue-on-error: true
+      ##################################################
+      # Run Gradle Build
+      ##################################################
+      - name: Run Gradle Test
+        if: steps.detect-build.outputs.build_tool == 'gradle'
+        shell: bash
+        run: |
+          GRADLE_FILE=$(find . \( -name build.gradle -o -name build.gradle.kts \) | head -1)
+          echo "Using Gradle file: $GRADLE_FILE"
+          cd "$(dirname "$GRADLE_FILE")"
+          ./gradlew test
+        continue-on-error: true
+      ##################################################
+      # Install AI Review Agent
+      ##################################################
+      - name: Install AI PR Review Agent
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          git clone https://${{ secrets.AI_AGENT_TOKEN }}@github.com/nandagopal1988/ai-pr-review-agent.git
+          cd ai-pr-review-agent
+          python -m pip install .
+      ##################################################
+      # Execute AI Review
+      ##################################################
+      - name: Run AI PR Review
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SERVICE_NAME: ${{ env.SERVICE_NAME }}
+          REVIEW_FOCUS: ${{ env.REVIEW_FOCUS }}
+          REVIEW_CONTEXT: ${{ env.REVIEW_CONTEXT }}
+          REVIEW_STANDARDS: ${{ env.REVIEW_STANDARDS }}
+        run: |
+          ai-pr-review
+      ##################################################
+      # Generate Summary
+      ##################################################
+      - name: Create Review Summary
+        shell: bash
+        run: |
+          echo "# 🤖 AI PR Review Agent" > review-summary.md
+          echo "" >> review-summary.md
+          echo "Service: $SERVICE_NAME" >> review-summary.md
+          echo "" >> review-summary.md
+          echo "Focus: $REVIEW_FOCUS" >> review-summary.md
+          echo "" >> review-summary.md
+          echo "## AI Findings" >> review-summary.md
+          if [ -f llm-review.md ]; then
+            cat llm-review.md >> review-summary.md
+          else
+            echo "AI review output not generated." >> review-summary.md
+          fi
+      ##################################################
+      # Comment PR
+      ##################################################
+      - name: Comment on Pull Request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync(
+              'review-summary.md',
+              'utf8'
+            );
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
